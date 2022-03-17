@@ -1,23 +1,41 @@
-import logo from './logo.svg';
-import './App.css';
+import { 
+  useConnect, 
+  useAccount, 
+  InjectedConnector, 
+  chain
+} from "wagmi";
+import { useState } from "react";
+
+const metamaskConnector = new InjectedConnector({
+  chains: [chain.kovan.id], 
+})
 
 function App() {
+  const [connectResult, connect] = useConnect();
+  const [accountResult, disconnect] = useAccount();
+  const [error, setError] = useState("");
+
+  const connectMetamask = async() => {
+    try{
+      const result = await connect(metamaskConnector)
+      if(result.data.chain.unsupported){
+        throw new Error("Network is not supported!")
+      }
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      {connectResult.data.connected ? 
+        <div>
+          <p>Account: {accountResult.data.address}</p>
+          <p>Error: {error ? error : "none"}</p>
+          <button onClick={disconnect}>Disconnect</button>
+        </div> : 
+        <button onClick={connectMetamask}>Connect Wallet</button>
+      }
     </div>
   );
 }
